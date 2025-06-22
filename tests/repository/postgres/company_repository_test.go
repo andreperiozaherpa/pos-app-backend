@@ -8,35 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"pos-app/backend/internal/models"
-
 	"github.com/google/uuid"
 )
-
-// createRandomCompany adalah fungsi helper untuk membuat dan menyimpan company baru ke DB.
-func createRandomCompany(t *testing.T) *models.Company {
-	contactInfoJSON, err := json.Marshal(map[string]string{"email": "contact@example.com", "phone": "123-456-7890"})
-	if err != nil {
-		t.Fatalf("Gagal marshal contact info untuk test: %v", err)
-	}
-
-	company := &models.Company{
-		ID:                   uuid.New(),
-		Name:                 "Test Company " + uuid.NewString(),
-		Address:              sql.NullString{String: "123 Test St, Testville", Valid: true},
-		ContactInfo:          contactInfoJSON,
-		TaxIDNumber:          sql.NullString{String: "TAX" + uuid.NewString(), Valid: true},
-		DefaultTaxPercentage: sql.NullFloat64{Float64: 11.50, Valid: true},
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
-	}
-
-	err = companyTestRepo.Create(context.Background(), company)
-	if err != nil {
-		t.Fatalf("Gagal membuat company random untuk test: %v", err)
-	}
-	return company
-}
 
 func TestCompanyRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()

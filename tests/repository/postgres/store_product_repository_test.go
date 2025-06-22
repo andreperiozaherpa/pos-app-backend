@@ -11,57 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomMasterProduct adalah helper untuk membuat master product sebagai dependensi.
-func createRandomMasterProduct(t *testing.T, companyID uuid.UUID) *models.MasterProduct {
-	mp := &models.MasterProduct{
-		ID:                uuid.New(),
-		CompanyID:         companyID,
-		MasterProductCode: "MPC-" + randomString(6),
-		Name:              "Master Product " + randomString(8),
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
-	}
-	// Untuk test, kita bisa insert langsung ke DB tanpa repository master product
-	_, err := testDB.Exec(`INSERT INTO master_products (id, company_id, master_product_code, name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-		mp.ID, mp.CompanyID, mp.MasterProductCode, mp.Name, mp.CreatedAt, mp.UpdatedAt)
-	if err != nil {
-		t.Fatalf("Gagal membuat master product dependency: %v", err)
-	}
-	return mp
-}
-
-// createRandomStoreProduct adalah helper untuk membuat produk baru.
-func createRandomStoreProduct(t *testing.T) (*models.StoreProduct, *models.Store, *models.Supplier) {
-	// Buat dependensi: Store dan Supplier
-	businessLineID := createTestCompanyAndBusinessLine(t)
-	store := createRandomStore(t, businessLineID)
-	supplier, _ := createRandomSupplier(t) // Supplier juga butuh company, tapi helper sudah mengurusnya
-	masterProduct := createRandomMasterProduct(t, supplier.CompanyID)
-
-	product := &models.StoreProduct{
-		ID:                uuid.New(),
-		MasterProductID:   masterProduct.ID,
-		StoreID:           store.ID,
-		SupplierID:        uuid.NullUUID{UUID: supplier.ID, Valid: true},
-		StoreSpecificSKU:  sql.NullString{String: "SKU-" + randomString(6), Valid: true},
-		PurchasePrice:     100.50,
-		SellingPrice:      150.75,
-		WholesalePrice:    sql.NullFloat64{Float64: 120.00, Valid: true},
-		Stock:             50,
-		MinimumStockLevel: sql.NullInt32{Int32: 10, Valid: true},
-		ExpiryDate:        sql.NullTime{Time: time.Now().AddDate(1, 0, 0), Valid: true}, // Removed Name, Description, Category, UnitOfMeasure, Barcode
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
-	}
-
-	err := storeProductTestRepo.Create(context.Background(), product)
-	if err != nil {
-		t.Fatalf("Gagal membuat produk random untuk test: %v", err)
-	}
-
-	return product, store, supplier
-}
-
 func TestStoreProductRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 

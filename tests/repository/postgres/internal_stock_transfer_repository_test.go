@@ -11,60 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomInternalStockTransfer adalah helper untuk membuat internal stock transfer baru dengan item.
-func createRandomInternalStockTransfer(t *testing.T) *models.InternalStockTransfer {
-	// 1. Buat semua dependensi
-	company := createRandomCompany(t)
-	businessLineID := createTestCompanyAndBusinessLine(t) // This helper creates a company too, might be redundant
-	sourceStore := createRandomStore(t, businessLineID)
-	destinationStore := createRandomStore(t, businessLineID)
-	storeProduct, _, _ := createRandomStoreProduct(t) // This helper creates its own dependencies
-	requestedByUser := createRandomEmployee(t)
-
-	// Ensure sourceStore and destinationStore belong to the same company
-	// For simplicity in test, we'll just use the company from the first store
-	companyID := company.ID
-
-	// 2. Buat item transfer
-	item1 := models.InternalStockTransferItem{
-		ID:                   uuid.New(),
-		SourceStoreProductID: storeProduct.ID,
-		QuantityRequested:    5,
-		QuantityShipped:      0,
-		QuantityReceived:     0,
-		Notes:                sql.NullString{String: "Item for transfer", Valid: true},
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
-	}
-
-	// 3. Buat header transfer
-	ist := &models.InternalStockTransfer{
-		ID:                 uuid.New(),
-		TransferCode:       "IST-" + randomString(8),
-		CompanyID:          companyID,
-		SourceStoreID:      sourceStore.ID,
-		DestinationStoreID: destinationStore.ID,
-		TransferDate:       time.Now(),
-		Status:             models.StockTransferStatusPending,
-		Notes:              sql.NullString{String: "Transfer request", Valid: true},
-		RequestedByUserID:  uuid.NullUUID{UUID: requestedByUser.UserID, Valid: true},
-		ApprovedByUserID:   uuid.NullUUID{},
-		ShippedByUserID:    uuid.NullUUID{},
-		ReceivedByUserID:   uuid.NullUUID{},
-		CreatedAt:          time.Now(),
-		UpdatedAt:          time.Now(),
-		Items:              []models.InternalStockTransferItem{item1},
-	}
-
-	// 4. Panggil repository untuk membuat transfer
-	err := internalStockTransferTestRepo.Create(context.Background(), ist)
-	if err != nil {
-		t.Fatalf("Gagal membuat internal stock transfer random untuk test: %v", err)
-	}
-
-	return ist
-}
-
 func TestInternalStockTransferRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 

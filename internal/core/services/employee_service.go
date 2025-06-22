@@ -22,9 +22,39 @@ type EmployeeService interface {
 	ListEmployees(ctx context.Context, companyID uuid.UUID) ([]*models.Employee, error)
 }
 
+// TransactionFunc adalah tipe fungsi yang berisi logika bisnis untuk dijalankan dalam satu transaksi.
+// Ia menerima repository yang sudah terikat dengan transaksi tersebut.
+type TransactionFunc func(userRepo postgres.UserRepository, employeeRepo postgres.EmployeeRepository, employeeRoleRepo postgres.EmployeeRoleRepository, roleRepo postgres.RoleRepository) error
+
+// TransactionRunner adalah tipe fungsi yang bertanggung jawab untuk mengelola siklus hidup transaksi.
+type TransactionRunner func(ctx context.Context, fn TransactionFunc) error
+
+// NewTransactionRunner membuat implementasi TransactionRunner yang konkret menggunakan *sql.DB.
+func NewTransactionRunner(db *sql.DB) TransactionRunner {
+	return func(ctx context.Context, fn TransactionFunc) error {
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("gagal memulai transaksi: %w", err)
+		}
+		defer tx.Rollback()
+
+		// Buat instance repository yang terikat dengan transaksi
+		userRepo := postgres.NewPgUserRepository(tx)
+		employeeRepo := postgres.NewPgEmployeeRepository(tx)
+		employeeRoleRepo := postgres.NewPgEmployeeRoleRepository(tx)
+		roleRepo := postgres.NewPgRoleRepository(tx)
+
+		if err := fn(userRepo, employeeRepo, employeeRoleRepo, roleRepo); err != nil {
+			return err // Rollback akan dipanggil oleh defer
+		}
+
+		return tx.Commit()
+	}
+}
+
 // employeeService adalah implementasi dari EmployeeService.
 type employeeService struct {
-	db               *sql.DB // Diperlukan untuk memulai transaksi
+	runInTransaction TransactionRunner // Mengelola transaksi
 	userRepo         postgres.UserRepository
 	employeeRepo     postgres.EmployeeRepository
 	employeeRoleRepo postgres.EmployeeRoleRepository
@@ -32,9 +62,9 @@ type employeeService struct {
 }
 
 // NewEmployeeService adalah constructor untuk membuat instance baru dari employeeService.
-func NewEmployeeService(db *sql.DB, userRepo postgres.UserRepository, employeeRepo postgres.EmployeeRepository, employeeRoleRepo postgres.EmployeeRoleRepository, roleRepo postgres.RoleRepository) EmployeeService {
+func NewEmployeeService(runner TransactionRunner, userRepo postgres.UserRepository, employeeRepo postgres.EmployeeRepository, employeeRoleRepo postgres.EmployeeRoleRepository, roleRepo postgres.RoleRepository) EmployeeService {
 	return &employeeService{
-		db:               db,
+		runInTransaction: runner,
 		userRepo:         userRepo,
 		employeeRepo:     employeeRepo,
 		employeeRoleRepo: employeeRoleRepo,
@@ -44,70 +74,62 @@ func NewEmployeeService(db *sql.DB, userRepo postgres.UserRepository, employeeRe
 
 // AddEmployee menambahkan karyawan baru, termasuk membuat data user dan menetapkan peran dalam satu transaksi.
 func (s *employeeService) AddEmployee(ctx context.Context, employee *models.Employee, user *models.User, password string, roleIDs []int32) (*models.Employee, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("gagal memulai transaksi: %w", err)
-	}
-	defer tx.Rollback() // Rollback jika terjadi error
-
-	// Buat instance repository yang terikat dengan transaksi
-	txUserRepo := postgres.NewPgUserRepository(tx)
-	txEmployeeRepo := postgres.NewPgEmployeeRepository(tx)
-	txEmployeeRoleRepo := postgres.NewPgEmployeeRoleRepository(tx)
-	txRoleRepo := postgres.NewPgRoleRepository(tx)
-
-	// 1. Validasi bahwa peran yang diberikan ada
-	for _, roleID := range roleIDs {
-		if _, err := txRoleRepo.GetByID(ctx, roleID); err != nil {
-			if err == sql.ErrNoRows {
-				return nil, fmt.Errorf("%w: dengan id %d", ErrRoleNotFound, roleID)
+	transactionalLogic := func(userRepo postgres.UserRepository, employeeRepo postgres.EmployeeRepository, employeeRoleRepo postgres.EmployeeRoleRepository, roleRepo postgres.RoleRepository) error {
+		// 1. Validasi bahwa peran yang diberikan ada
+		for _, roleID := range roleIDs {
+			if _, err := roleRepo.GetByID(ctx, roleID); err != nil {
+				if err == sql.ErrNoRows {
+					return fmt.Errorf("%w: dengan id %d", ErrRoleNotFound, roleID)
+				}
+				return err
 			}
-			return nil, err
 		}
+
+		// 2. Buat data user
+		if _, err := userRepo.GetByUsername(ctx, user.Username.String); err == nil {
+			return ErrUsernameExists
+		}
+		if user.Email.Valid {
+			if _, err := userRepo.GetByEmail(ctx, user.Email.String); err == nil {
+				return ErrEmailExists
+			}
+		}
+
+		hashedPassword, err := utils.HashPassword(password)
+		if err != nil {
+			return err
+		}
+		user.ID = uuid.New()
+		user.PasswordHash = sql.NullString{String: hashedPassword, Valid: true}
+		user.IsActive = true
+		user.UserType = models.UserTypeEmployee
+		user.CreatedAt = time.Now()
+		user.UpdatedAt = time.Now()
+
+		if err := userRepo.Create(ctx, user); err != nil {
+			return err
+		}
+
+		// 3. Buat data employee yang terhubung dengan user
+		employee.UserID = user.ID
+		if err := employeeRepo.Create(ctx, employee); err != nil {
+			return err
+		}
+
+		// 4. Tetapkan peran ke karyawan
+		for _, roleID := range roleIDs {
+			if err := employeeRoleRepo.AssignRoleToEmployee(ctx, user.ID, roleID); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
-	// 2. Buat data user
-	// Validasi duplikasi username/email
-	if _, err := txUserRepo.GetByUsername(ctx, user.Username.String); err == nil {
-		return nil, ErrUsernameExists
-	}
-	if user.Email.Valid {
-		if _, err := txUserRepo.GetByEmail(ctx, user.Email.String); err == nil {
-			return nil, ErrEmailExists
-		}
-	}
-
-	hashedPassword, err := utils.HashPassword(password)
-	if err != nil {
+	if err := s.runInTransaction(ctx, transactionalLogic); err != nil {
 		return nil, err
 	}
-	user.ID = uuid.New()
-	user.PasswordHash = sql.NullString{String: hashedPassword, Valid: true}
-	user.IsActive = true
-	user.UserType = models.UserTypeEmployee
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
 
-	if err := txUserRepo.Create(ctx, user); err != nil {
-		return nil, err
-	}
-
-	// 3. Buat data employee yang terhubung dengan user
-	employee.UserID = user.ID
-	if err := txEmployeeRepo.Create(ctx, employee); err != nil {
-		return nil, err
-	}
-
-	// 4. Tetapkan peran ke karyawan
-	for _, roleID := range roleIDs {
-		empRole := &models.EmployeeRole{EmployeeUserID: user.ID, RoleID: roleID}
-		if err := txEmployeeRoleRepo.Create(ctx, empRole); err != nil {
-			return nil, err
-		}
-	}
-
-	// Commit transaksi jika semua operasi berhasil
-	return employee, tx.Commit()
+	return employee, nil
 }
 
 // UpdateEmployee memperbarui data spesifik karyawan.
@@ -122,12 +144,12 @@ func (s *employeeService) DeactivateEmployee(ctx context.Context, employeeUserID
 
 // AssignRoleToEmployee menetapkan peran ke karyawan.
 func (s *employeeService) AssignRoleToEmployee(ctx context.Context, employeeUserID uuid.UUID, roleID int32) error {
-	return s.employeeRoleRepo.Create(ctx, &models.EmployeeRole{EmployeeUserID: employeeUserID, RoleID: roleID})
+	return s.employeeRoleRepo.AssignRoleToEmployee(ctx, employeeUserID, roleID)
 }
 
 // RemoveRoleFromEmployee mencabut peran dari karyawan.
 func (s *employeeService) RemoveRoleFromEmployee(ctx context.Context, employeeUserID uuid.UUID, roleID int32) error {
-	return s.employeeRoleRepo.Delete(ctx, employeeUserID, roleID)
+	return s.employeeRoleRepo.RemoveRoleFromEmployee(ctx, employeeUserID, roleID)
 }
 
 // ListEmployees mengambil daftar karyawan untuk sebuah perusahaan.

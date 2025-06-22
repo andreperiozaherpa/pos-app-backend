@@ -18,11 +18,11 @@ type CustomerRepository interface {
 
 // pgCustomerRepository adalah implementasi dari CustomerRepository untuk PostgreSQL.
 type pgCustomerRepository struct {
-	db *sql.DB
+	db DBExecutor
 }
 
 // NewPgCustomerRepository adalah constructor untuk membuat instance baru dari pgCustomerRepository.
-func NewPgCustomerRepository(db *sql.DB) CustomerRepository {
+func NewPgCustomerRepository(db DBExecutor) CustomerRepository {
 	return &pgCustomerRepository{db: db}
 }
 

@@ -6,32 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"pos-app/backend/internal/models"
-
 	"github.com/google/uuid"
 )
-
-// createRandomBusinessLine adalah helper untuk membuat business line baru.
-// Ini membutuhkan company yang sudah ada, jadi kita panggil createRandomCompany dulu.
-func createRandomBusinessLine(t *testing.T) (*models.BusinessLine, *models.Company) {
-	company := createRandomCompany(t)
-
-	bl := &models.BusinessLine{
-		ID:          uuid.New(),
-		CompanyID:   company.ID,
-		Name:        "Business Line " + uuid.NewString(),
-		Description: sql.NullString{String: "Test Description", Valid: true},
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	err := businessLineTestRepo.Create(context.Background(), bl)
-	if err != nil {
-		t.Fatalf("Gagal membuat business line random untuk test: %v", err)
-	}
-
-	return bl, company
-}
 
 func TestBusinessLineRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
@@ -124,14 +100,5 @@ func TestBusinessLineRepository_Delete(t *testing.T) {
 	_, err = businessLineTestRepo.GetByID(context.Background(), blToDelete.ID)
 	if err != sql.ErrNoRows {
 		t.Errorf("Diharapkan error sql.ErrNoRows setelah delete, tetapi mendapatkan: %v", err)
-	}
-}
-
-// createRandomBusinessLineForCompany adalah helper spesifik untuk test list
-func createRandomBusinessLineForCompany(t *testing.T, companyID uuid.UUID) {
-	bl := &models.BusinessLine{ID: uuid.New(), CompanyID: companyID, Name: "Another BL", CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	err := businessLineTestRepo.Create(context.Background(), bl)
-	if err != nil {
-		t.Fatalf("Gagal membuat business line untuk company spesifik: %v", err)
 	}
 }

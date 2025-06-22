@@ -6,58 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"pos-app/backend/internal/models"
-
 	"github.com/google/uuid"
 )
-
-// createTestCompanyAndBusinessLine adalah helper untuk membuat dependensi yang dibutuhkan oleh Store.
-// Ini mengembalikan ID dari business_line yang dibuat.
-func createTestCompanyAndBusinessLine(t *testing.T) uuid.UUID {
-	// 1. Buat Company secara manual untuk dependensi
-	companyID := uuid.New()
-	_, err := testDB.Exec(`
-		INSERT INTO companies (id, name, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4)`,
-		companyID, "Company for Store Test", time.Now(), time.Now())
-	if err != nil {
-		t.Fatalf("Gagal membuat company dependency untuk test store: %v", err)
-	}
-
-	// 2. Buat BusinessLine secara manual untuk dependensi
-	businessLineID := uuid.New()
-	_, err = testDB.Exec(`
-		INSERT INTO business_lines (id, company_id, name, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)`,
-		businessLineID, companyID, "Business Line for Store Test", time.Now(), time.Now())
-	if err != nil {
-		t.Fatalf("Gagal membuat business_line dependency untuk test store: %v", err)
-	}
-
-	return businessLineID
-}
-
-// createRandomStore adalah fungsi helper untuk membuat dan menyimpan store baru ke DB.
-func createRandomStore(t *testing.T, businessLineID uuid.UUID) *models.Store {
-	store := &models.Store{
-		ID:             uuid.New(),
-		BusinessLineID: businessLineID,
-		ParentStoreID:  uuid.NullUUID{Valid: false}, // Tidak ada parent untuk test sederhana
-		Name:           "Test Store " + uuid.NewString(),
-		StoreCode:      sql.NullString{String: "TS-" + uuid.NewString()[:6], Valid: true},
-		StoreType:      models.StoreTypeCabang,
-		Address:        sql.NullString{String: "456 Store Ave", Valid: true},
-		PhoneNumber:    sql.NullString{String: "987654321", Valid: true},
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-
-	err := storeTestRepo.Create(context.Background(), store)
-	if err != nil {
-		t.Fatalf("Gagal membuat store random untuk test: %v", err)
-	}
-	return store
-}
 
 func TestStoreRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()

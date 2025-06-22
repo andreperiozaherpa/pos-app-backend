@@ -22,6 +22,9 @@ type UserRepository interface {
 	// GetByEmail mengambil pengguna berdasarkan email. Menggunakan context.
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	// Update memperbarui data pengguna yang ada. Menggunakan context.
+	// GetByPhoneNumber mengambil pengguna berdasarkan nomor telepon. Menggunakan context.
+	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*models.User, error)
+
 	Update(ctx context.Context, user *models.User) error
 	// Delete menghapus pengguna berdasarkan ID (biasanya soft delete dengan flag is_active).
 	// Untuk contoh ini, kita bisa implementasikan hard delete atau soft delete.
@@ -152,6 +155,35 @@ func (r *pgUserRepository) GetByEmail(ctx context.Context, email string) (*model
 		&user.PasswordHash,
 		&user.FullName,
 		&user.Email, // Jika email di DB bisa NULL, pastikan model.User.Email adalah sql.NullString
+		&user.PhoneNumber,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+// GetByPhoneNumber mengimplementasikan UserRepository.GetByPhoneNumber
+func (r *pgUserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*models.User, error) {
+	user := &models.User{}
+	query := `
+		SELECT id, user_type, username, password_hash, full_name, email, phone_number, is_active, created_at, updated_at
+		FROM users
+		WHERE phone_number = $1`
+
+	err := r.db.QueryRowContext(ctx, query, phoneNumber).Scan(
+		&user.ID,
+		&user.UserType,
+		&user.Username,
+		&user.PasswordHash,
+		&user.FullName,
+		&user.Email,
 		&user.PhoneNumber,
 		&user.IsActive,
 		&user.CreatedAt,

@@ -17,4 +17,7 @@ type Customer struct {
 	Tier             sql.NullString `db:"tier"`              // Bisa NULL
 	CreatedAt        time.Time      `db:"created_at"`
 	UpdatedAt        time.Time      `db:"updated_at"`
+
+	// Relasi (digunakan untuk join/preload data, bukan kolom di tabel 'customers')
+	User *User `json:"user,omitempty" db:"-"`
 }

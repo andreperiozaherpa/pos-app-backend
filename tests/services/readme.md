@@ -20,9 +20,9 @@ Berikut adalah daftar service yang akan memiliki unit test di direktori ini, bes
 - `UserService`:
   - **Status: ✅ SELESAI & TERUJI**
 - `EmployeeService`:
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `CustomerService`:
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `RoleService`:
   - **Status: ⬜ TO-DO**
 - `PermissionService`:

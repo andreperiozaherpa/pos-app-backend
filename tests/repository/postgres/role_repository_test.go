@@ -3,26 +3,8 @@ package repository_test
 import (
 	"context"
 	"database/sql"
-	"math/rand"
 	"testing"
-	"time"
-
-	"pos-app/backend/internal/models"
 )
-
-// createRandomRole adalah fungsi helper untuk membuat dan menyimpan role baru ke DB.
-func createRandomRole(t *testing.T) *models.Role {
-	role := &models.Role{
-		Name:        "Role " + randomString(8),
-		Description: sql.NullString{String: "Description for " + randomString(10), Valid: true},
-	}
-
-	err := roleTestRepo.Create(context.Background(), role)
-	if err != nil {
-		t.Fatalf("Gagal membuat role random untuk test: %v", err)
-	}
-	return role
-}
 
 func TestRoleRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
@@ -140,15 +122,3 @@ func TestRoleRepository_Delete(t *testing.T) {
 		t.Errorf("Diharapkan error sql.ErrNoRows setelah delete, tetapi mendapatkan: %v", err)
 	}
 }
-
-// randomString helper function (bisa dipindahkan ke file utilitas jika sering dipakai)
-func randomString(n int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[r.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-var r = rand.New(rand.NewSource(time.Now().UnixNano()))

@@ -11,39 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomOperationalExpense is a helper to create a random operational expense.
-func createRandomOperationalExpense(t *testing.T) *models.OperationalExpense {
-	// Create dependencies: businessLine and its associated company.
-	// createRandomBusinessLine already creates a company internally.
-	businessLine, company := createRandomBusinessLine(t)
-
-	// Create a store under this business line.
-	store := createRandomStore(t, businessLine.ID)
-
-	// Create an employee (user).
-	user := createRandomEmployee(t)
-
-	expense := &models.OperationalExpense{
-		ID:              uuid.New(),
-		CompanyID:       company.ID,
-		StoreID:         uuid.NullUUID{UUID: store.ID, Valid: true}, // Associate with a store
-		ExpenseDate:     time.Now().AddDate(0, 0, -5),
-		Category:        "Gaji Karyawan",
-		Description:     sql.NullString{String: "Gaji bulanan karyawan", Valid: true},
-		Amount:          1500000.00,
-		CreatedByUserID: uuid.NullUUID{UUID: user.UserID, Valid: true},
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
-	}
-
-	err := operationalExpenseTestRepo.Create(context.Background(), expense)
-	if err != nil {
-		t.Fatalf("Gagal membuat operational expense random untuk test: %v", err)
-	}
-
-	return expense
-}
-
 func TestOperationalExpenseRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 

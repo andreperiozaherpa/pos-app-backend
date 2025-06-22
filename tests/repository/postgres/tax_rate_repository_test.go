@@ -3,37 +3,9 @@ package repository_test
 import (
 	"context"
 	"database/sql"
-	"math/rand"
 	"testing"
 	"time"
-
-	"pos-app/backend/internal/models"
-
-	"github.com/google/uuid"
 )
-
-// createRandomTaxRate adalah helper untuk membuat tax rate baru.
-// Helper ini sekarang menggunakan TaxRateRepository.Create.
-func createRandomTaxRate(t *testing.T, companyID uuid.UUID) *models.TaxRate {
-	tr := &models.TaxRate{
-		CompanyID:      companyID,
-		Name:           "Tax " + randomString(5),
-		RatePercentage: float64(rand.Intn(2000)) / 100, // Random percentage up to 20.00%
-		Description:    sql.NullString{String: "Random tax rate", Valid: true},
-		IsActive:       true,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-
-	err := taxRateTestRepo.Create(context.Background(), tr)
-	if err != nil {
-		t.Fatalf("Gagal membuat tax rate random untuk test: %v", err)
-	}
-	if tr.ID == 0 {
-		t.Fatal("TaxRate ID tidak di-populate setelah create")
-	}
-	return tr
-}
 
 func TestTaxRateRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()

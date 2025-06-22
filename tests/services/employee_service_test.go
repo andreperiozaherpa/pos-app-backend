@@ -20,9 +20,15 @@ func setupEmployeeServiceTest() (services.EmployeeService, *mocks.UserRepository
 	mockEmployeeRepo := new(mocks.EmployeeRepositoryMock)
 	mockEmployeeRoleRepo := new(mocks.EmployeeRoleRepositoryMock)
 	mockRoleRepo := new(mocks.RoleRepositoryMock)
-	// Kita tidak bisa menguji transaksi secara langsung dengan mock, jadi kita lewati *sql.DB
-	// Logika transaksi diuji secara implisit dengan memastikan semua mock dipanggil.
-	employeeService := services.NewEmployeeService(nil, mockUserRepo, mockEmployeeRepo, mockEmployeeRoleRepo, mockRoleRepo)
+
+	// Buat mock TransactionRunner. Ia hanya akan menjalankan fungsi logika bisnis
+	// dengan mock repository yang sudah kita siapkan.
+	mockRunner := func(ctx context.Context, fn services.TransactionFunc) error {
+		return fn(mockUserRepo, mockEmployeeRepo, mockEmployeeRoleRepo, mockRoleRepo)
+	}
+
+	// Inisialisasi service dengan mock runner dan mock repositories.
+	employeeService := services.NewEmployeeService(mockRunner, mockUserRepo, mockEmployeeRepo, mockEmployeeRoleRepo, mockRoleRepo)
 	return employeeService, mockUserRepo, mockEmployeeRepo, mockEmployeeRoleRepo, mockRoleRepo
 }
 
@@ -50,7 +56,7 @@ func TestEmployeeService_AddEmployee(t *testing.T) {
 		mockUserRepo.On("GetByEmail", mock.Anything, user.Email.String).Return(nil, sql.ErrNoRows).Once()
 		mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Return(nil).Once()
 		mockEmployeeRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Employee")).Return(nil).Once()
-		mockEmployeeRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.EmployeeRole")).Return(nil).Once()
+		mockEmployeeRoleRepo.On("AssignRoleToEmployee", mock.Anything, mock.AnythingOfType("uuid.UUID"), roleID).Return(nil).Once()
 
 		// Execute
 		createdEmployee, err := employeeService.AddEmployee(context.Background(), employee, user, password, []int32{roleID})
@@ -66,8 +72,9 @@ func TestEmployeeService_AddEmployee(t *testing.T) {
 	})
 
 	t.Run("Role Not Found", func(t *testing.T) {
-		// Reset mocks
+		// Setup ulang service dengan mock baru untuk test case ini
 		employeeService, _, _, _, mockRoleRepo := setupEmployeeServiceTest()
+		// Reset user dan employee untuk memastikan tidak ada state dari test sebelumnya
 
 		mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, sql.ErrNoRows).Once()
 
@@ -79,7 +86,7 @@ func TestEmployeeService_AddEmployee(t *testing.T) {
 	})
 
 	t.Run("Username Exists", func(t *testing.T) {
-		// Reset mocks
+		// Setup ulang service dengan mock baru
 		employeeService, mockUserRepo, _, _, mockRoleRepo := setupEmployeeServiceTest()
 
 		mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(&models.Role{ID: roleID}, nil).Once()

@@ -27,13 +27,13 @@ Berikut adalah daftar mock yang ada atau akan dibuat di direktori ini, beserta s
 - `CompanyRepositoryMock`: Mock untuk `internal/data/postgres.CompanyRepository`.
   - **Status: ⬜ TO-DO**
 - `CustomerRepositoryMock`: Mock untuk `internal/data/postgres.CustomerRepository`.
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `DiscountRepositoryMock`: Mock untuk `internal/data/postgres.DiscountRepository`.
   - **Status: ⬜ TO-DO**
 - `EmployeeRepositoryMock`: Mock untuk `internal/data/postgres.EmployeeRepository`.
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `EmployeeRoleRepositoryMock`: Mock untuk `internal/data/postgres.EmployeeRoleRepository`.
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `InternalStockTransferRepositoryMock`: Mock untuk `internal/data/postgres.InternalStockTransferRepository`.
   - **Status: ⬜ TO-DO**
 - `MasterProductRepositoryMock`: Mock untuk `internal/data/postgres.MasterProductRepository`.
@@ -47,7 +47,7 @@ Berikut adalah daftar mock yang ada atau akan dibuat di direktori ini, beserta s
 - `RolePermissionRepositoryMock`: Mock untuk `internal/data/postgres.RolePermissionRepository`.
   - **Status: ⬜ TO-DO**
 - `RoleRepositoryMock`: Mock untuk `internal/data/postgres.RoleRepository`.
-  - **Status: ⬜ TO-DO**
+  - **Status: ✅ SELESAI & TERUJI**
 - `ShiftRepositoryMock`: Mock untuk `internal/data/postgres.ShiftRepository`.
   - **Status: ⬜ TO-DO**
 - `StockMovementRepositoryMock`: Mock untuk `internal/data/postgres.StockMovementRepository`.

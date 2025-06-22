@@ -6,63 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"pos-app/backend/internal/models"
-
 	"github.com/google/uuid"
 )
-
-// createEmployeeDependencies adalah helper untuk membuat semua data yang dibutuhkan oleh seorang Employee.
-func createEmployeeDependencies(t *testing.T) (userID, companyID, storeID uuid.UUID) {
-	// 1. Buat User
-	user := &models.User{
-		ID:        uuid.New(),
-		UserType:  models.UserTypeEmployee,
-		IsActive:  true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	err := userTestRepo.Create(context.Background(), user)
-	if err != nil {
-		t.Fatalf("Gagal membuat user dependency untuk test employee: %v", err)
-	}
-
-	// 2. Buat Company dan BusinessLine
-	businessLineID := createTestCompanyAndBusinessLine(t)
-
-	// 3. Ambil Company ID dari BusinessLine (ini asumsi, lebih baik jika helper mengembalikan companyID juga)
-	var compID uuid.UUID
-	err = testDB.QueryRow(`SELECT company_id FROM business_lines WHERE id = $1`, businessLineID).Scan(&compID)
-	if err != nil {
-		t.Fatalf("Gagal mengambil company_id dari business_line: %v", err)
-	}
-
-	// 4. Buat Store
-	store := createRandomStore(t, businessLineID)
-
-	return user.ID, compID, store.ID
-}
-
-// createRandomEmployee adalah fungsi helper untuk membuat dan menyimpan employee baru ke DB.
-func createRandomEmployee(t *testing.T) *models.Employee {
-	userID, companyID, storeID := createEmployeeDependencies(t)
-
-	employee := &models.Employee{
-		UserID:           userID,
-		CompanyID:        companyID,
-		StoreID:          uuid.NullUUID{UUID: storeID, Valid: true},
-		EmployeeIDNumber: sql.NullString{String: "EMP-" + uuid.NewString()[:8], Valid: true},
-		JoinDate:         sql.NullTime{Time: time.Now(), Valid: true},
-		Position:         sql.NullString{String: "Kasir", Valid: true},
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	}
-
-	err := employeeTestRepo.Create(context.Background(), employee)
-	if err != nil {
-		t.Fatalf("Gagal membuat employee random untuk test: %v", err)
-	}
-	return employee
-}
 
 func TestEmployeeRepository_CreateAndGetByUserID(t *testing.T) {
 	defer cleanup()

@@ -18,18 +18,28 @@ type TransactionRepository interface {
 
 // pgTransactionRepository adalah implementasi dari TransactionRepository untuk PostgreSQL.
 type pgTransactionRepository struct {
-	db *sql.DB
+	db DBExecutor
 }
 
 // NewPgTransactionRepository adalah constructor untuk membuat instance baru dari pgTransactionRepository.
-func NewPgTransactionRepository(db *sql.DB) TransactionRepository {
+func NewPgTransactionRepository(db DBExecutor) TransactionRepository {
 	return &pgTransactionRepository{db: db}
 }
 
 // Create menyisipkan transaksi baru dan semua itemnya secara atomik.
 func (r *pgTransactionRepository) Create(ctx context.Context, t *models.Transaction) error {
 	// Memulai transaksi database
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, isTx := r.db.(*sql.Tx)
+	var err error
+	if !isTx {
+		db, ok := r.db.(*sql.DB)
+		if !ok {
+			return fmt.Errorf("unexpected DBExecutor type; expected *sql.DB or *sql.Tx")
+		}
+		// Memulai transaksi database jika belum dalam transaksi
+		tx, err = db.BeginTx(ctx, nil)
+	}
+
 	if err != nil {
 		return fmt.Errorf("gagal memulai transaksi: %w", err)
 	}
@@ -72,7 +82,10 @@ func (r *pgTransactionRepository) Create(ctx context.Context, t *models.Transact
 	}
 
 	// 3. Jika semua berhasil, commit transaksi
-	return tx.Commit()
+	if !isTx {
+		return tx.Commit()
+	}
+	return nil
 }
 
 // GetByID mengambil data transaksi beserta semua itemnya.

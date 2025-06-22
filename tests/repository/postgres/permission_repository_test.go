@@ -4,28 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"testing"
-
-	"pos-app/backend/internal/models"
 )
-
-// createRandomPermission adalah helper untuk membuat izin baru.
-func createRandomPermission(t *testing.T) *models.Permission {
-	permission := &models.Permission{
-		Name:        "test:permission:" + randomString(6),
-		Description: sql.NullString{String: "A test permission", Valid: true},
-		GroupName:   sql.NullString{String: "Testing", Valid: true},
-	}
-
-	err := permissionTestRepo.Create(context.Background(), permission)
-	if err != nil {
-		t.Fatalf("Gagal membuat permission random untuk test: %v", err)
-	}
-	if permission.ID == 0 {
-		t.Fatal("Permission ID tidak di-populate setelah create")
-	}
-
-	return permission
-}
 
 func TestPermissionRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()

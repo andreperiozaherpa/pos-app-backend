@@ -53,17 +53,17 @@ Berikut adalah daftar service yang akan diimplementasikan beserta metode-metode 
   - `GetUserProfile(ctx context.Context, userID uuid.UUID) (*models.User, error)`
   - `UpdateUserProfile(ctx context.Context, user *models.User) error`
 - **`EmployeeService`**:
-  - **Status: ⬜ TO-DO**
-  - `AddEmployee(ctx context.Context, employee *models.Employee, user *models.User) error`
+  - **Status: ✅ SELESAI & TERUJI**
+  - `AddEmployee(ctx context.Context, employee *models.Employee, user *models.User, password string, roleIDs []int32) (*models.Employee, error)`
   - `UpdateEmployee(ctx context.Context, employee *models.Employee) error`
   - `DeactivateEmployee(ctx context.Context, employeeUserID uuid.UUID) error`
   - `AssignRoleToEmployee(ctx context.Context, employeeUserID uuid.UUID, roleID int32) error`
   - `RemoveRoleFromEmployee(ctx context.Context, employeeUserID uuid.UUID, roleID int32) error`
   - `ListEmployees(ctx context.Context, companyID uuid.UUID) ([]*models.Employee, error)`
-- **`CustomerService`**:
-  - **Status: ⬜ TO-DO**
-  - `AddCustomer(ctx context.Context, customer *models.Customer, user *models.User) error`
-  - `UpdateCustomer(ctx context.Context, customer *models.Customer) error`
+    **`CustomerService`**:
+  - **Status: ✅ SELESAI & TERUJI**
+  - `AddCustomer(ctx context.Context, customer *models.Customer, user *models.User, password string) (*models.Customer, error)`
+  - `UpdateCustomer(ctx context.Context, customer *models.Customer, user *models.User) error`
   - `GetCustomerByPhoneNumber(ctx context.Context, phoneNumber string) (*models.Customer, error)`
   - `UpdateCustomerPoints(ctx context.Context, customerUserID uuid.UUID, points int) error`
 - **`RoleService`**:

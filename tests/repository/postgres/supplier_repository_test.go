@@ -11,30 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomSupplier adalah helper untuk membuat supplier baru.
-func createRandomSupplier(t *testing.T) (*models.Supplier, *models.Company) {
-	company := createRandomCompany(t)
-
-	supplier := &models.Supplier{
-		ID:            uuid.New(),
-		CompanyID:     company.ID,
-		Name:          "Supplier " + randomString(8),
-		ContactPerson: sql.NullString{String: "John Doe", Valid: true},
-		Email:         sql.NullString{String: "supplier@example.com", Valid: true},
-		PhoneNumber:   sql.NullString{String: "111-222-3333", Valid: true},
-		Address:       sql.NullString{String: "123 Supplier Lane", Valid: true},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-
-	err := supplierTestRepo.Create(context.Background(), supplier)
-	if err != nil {
-		t.Fatalf("Gagal membuat supplier random untuk test: %v", err)
-	}
-
-	return supplier, company
-}
-
 func TestSupplierRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 

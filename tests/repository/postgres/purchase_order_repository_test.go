@@ -11,52 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomPurchaseOrder adalah helper untuk membuat purchase order baru dengan item.
-func createRandomPurchaseOrder(t *testing.T) *models.PurchaseOrder {
-	// 1. Buat semua dependensi
-	store := createRandomStore(t, createTestCompanyAndBusinessLine(t))
-	supplier, _ := createRandomSupplier(t)
-	masterProduct := createRandomMasterProduct(t, supplier.CompanyID)
-	user := createRandomEmployee(t) // User yang membuat PO
-
-	// 2. Buat item purchase order
-	item1 := models.PurchaseOrderItem{
-		ID:                   uuid.New(),
-		MasterProductID:      masterProduct.ID,
-		QuantityOrdered:      10,
-		PurchasePricePerUnit: 50.00,
-		QuantityReceived:     0,
-		Subtotal:             500.00,
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
-	}
-
-	// 3. Buat header purchase order
-	totalAmount := item1.Subtotal
-	po := &models.PurchaseOrder{
-		ID:                   uuid.New(),
-		StoreID:              store.ID,
-		SupplierID:           supplier.ID,
-		OrderDate:            time.Now(),
-		ExpectedDeliveryDate: sql.NullTime{Time: time.Now().AddDate(0, 0, 7), Valid: true},
-		Status:               models.POStatusPending,
-		TotalAmount:          sql.NullFloat64{Float64: totalAmount, Valid: true},
-		Notes:                sql.NullString{String: "Initial order", Valid: true},
-		CreatedByUserID:      user.UserID,
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
-		Items:                []models.PurchaseOrderItem{item1},
-	}
-
-	// 4. Panggil repository untuk membuat purchase order
-	err := purchaseOrderTestRepo.Create(context.Background(), po)
-	if err != nil {
-		t.Fatalf("Gagal membuat purchase order random untuk test: %v", err)
-	}
-
-	return po
-}
-
 func TestPurchaseOrderRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 

@@ -6,47 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"pos-app/backend/internal/models"
-
 	"github.com/google/uuid"
 )
-
-// createRandomCustomer adalah fungsi helper untuk membuat dan menyimpan customer baru ke DB.
-func createRandomCustomer(t *testing.T) *models.Customer {
-	// 1. Buat User dengan tipe Customer
-	user := &models.User{
-		ID:        uuid.New(),
-		UserType:  models.UserTypeCustomer,
-		IsActive:  true,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	err := userTestRepo.Create(context.Background(), user)
-	if err != nil {
-		t.Fatalf("Gagal membuat user dependency untuk test customer: %v", err)
-	}
-
-	// 2. Buat Company
-	company := createRandomCompany(t)
-
-	// 3. Buat Customer
-	customer := &models.Customer{
-		UserID:           user.ID,
-		CompanyID:        company.ID,
-		MembershipNumber: sql.NullString{String: "MEM-" + uuid.NewString()[:8], Valid: true},
-		JoinDate:         sql.NullTime{Time: time.Now(), Valid: true},
-		Points:           100, // Menggunakan int32 langsung karena kolom points tidak NULL
-		Tier:             sql.NullString{String: "Gold", Valid: true},
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	}
-
-	err = customerTestRepo.Create(context.Background(), customer)
-	if err != nil {
-		t.Fatalf("Gagal membuat customer random untuk test: %v", err)
-	}
-	return customer
-}
 
 func TestCustomerRepository_CreateAndGetByUserID(t *testing.T) {
 	defer cleanup()

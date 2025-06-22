@@ -37,3 +37,16 @@ func (m *EmployeeRepositoryMock) Update(ctx context.Context, employee *models.Em
 	args := m.Called(ctx, employee)
 	return args.Error(0)
 }
+
+func (m *EmployeeRepositoryMock) Delete(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+func (m *EmployeeRepositoryMock) ListByStoreID(ctx context.Context, storeID uuid.UUID) ([]*models.Employee, error) {
+	args := m.Called(ctx, storeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.Employee), args.Error(1)
+}

@@ -17,6 +17,7 @@ type EmployeeRepository interface {
 	Delete(ctx context.Context, userID uuid.UUID) error
 	// Metode ini akan berguna untuk menampilkan semua karyawan di satu toko.
 	ListByStoreID(ctx context.Context, storeID uuid.UUID) ([]*models.Employee, error)
+	ListByCompanyID(ctx context.Context, companyID uuid.UUID) ([]*models.Employee, error)
 }
 
 // pgEmployeeRepository adalah implementasi dari EmployeeRepository untuk PostgreSQL.
@@ -108,6 +109,44 @@ func (r *pgEmployeeRepository) ListByStoreID(ctx context.Context, storeID uuid.U
 		ORDER BY created_at DESC`
 
 	rows, err := r.db.QueryContext(ctx, query, storeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var employees []*models.Employee
+	for rows.Next() {
+		employee := &models.Employee{}
+		if err := rows.Scan(
+			&employee.UserID,
+			&employee.CompanyID,
+			&employee.StoreID,
+			&employee.EmployeeIDNumber,
+			&employee.JoinDate,
+			&employee.Position,
+			&employee.CreatedAt,
+			&employee.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		employees = append(employees, employee)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}
+
+func (r *pgEmployeeRepository) ListByCompanyID(ctx context.Context, companyID uuid.UUID) ([]*models.Employee, error) {
+	query := `
+		SELECT user_id, company_id, store_id, employee_id_number, join_date, position, created_at, updated_at
+		FROM employees
+		WHERE company_id = $1
+		ORDER BY created_at DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, companyID)
 	if err != nil {
 		return nil, err
 	}

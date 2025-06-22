@@ -11,41 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// createRandomDiscount adalah helper untuk membuat diskon baru.
-func createRandomDiscount(t *testing.T) (*models.Discount, *models.Company) {
-	// 1. Buat dependensi
-	company := createRandomCompany(t)
-
-	// 2. Buat diskon
-	discount := &models.Discount{
-		ID:                        uuid.New(),
-		CompanyID:                 company.ID,
-		Name:                      "Diskon Lebaran " + randomString(5),
-		Description:               sql.NullString{String: "Diskon spesial hari raya", Valid: true},
-		DiscountType:              models.DiscountTypePercentage,
-		DiscountValue:             10.0, // 10%
-		ApplicableTo:              models.DiscountApplicableToTotalTransaction,
-		MasterProductIDApplicable: uuid.NullUUID{}, // Tidak berlaku untuk produk master
-		StoreProductIDApplicable:  uuid.NullUUID{}, // Tidak berlaku untuk produk toko
-		CategoryApplicable:        sql.NullString{},
-		CustomerTierApplicable:    sql.NullString{},
-		MinPurchaseAmount:         sql.NullFloat64{Float64: 100000, Valid: true},
-		StartDate:                 time.Now(),
-		EndDate:                   time.Now().AddDate(0, 1, 0), // Berlaku 1 bulan
-		IsActive:                  true,
-		CreatedAt:                 time.Now(),
-		UpdatedAt:                 time.Now(),
-	}
-
-	// 3. Panggil repository untuk membuat diskon
-	err := discountTestRepo.Create(context.Background(), discount)
-	if err != nil {
-		t.Fatalf("Gagal membuat diskon random untuk test: %v", err)
-	}
-
-	return discount, company
-}
-
 func TestDiscountRepository_CreateAndGetByID(t *testing.T) {
 	defer cleanup()
 
