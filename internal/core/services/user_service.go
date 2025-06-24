@@ -2,83 +2,47 @@ package services
 
 import (
 	"context"
-	"database/sql"
-	"pos-app/backend/internal/data/postgres"
 	"pos-app/backend/internal/models"
-	"pos-app/backend/internal/utils"
-	"time"
 
 	"github.com/google/uuid"
 )
 
-// UserService mendefinisikan interface untuk logika bisnis terkait manajemen pengguna.
+// UserService mendefinisikan kontrak use case terkait user (karyawan & pelanggan/member).
 type UserService interface {
-	RegisterUser(ctx context.Context, user *models.User, password string) error
-	GetUserProfile(ctx context.Context, userID uuid.UUID) (*models.User, error)
-	UpdateUserProfile(ctx context.Context, user *models.User) error
-}
+	// RegisterUser untuk membuat user baru (employee/customer).
+	RegisterUser(ctx context.Context, user *models.User) (uuid.UUID, error)
 
-// userService adalah implementasi dari UserService.
-type userService struct {
-	userRepo postgres.UserRepository
-}
+	// GetUserByID mengambil user berdasarkan ID.
+	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 
-// NewUserService adalah constructor untuk membuat instance baru dari userService.
-func NewUserService(userRepo postgres.UserRepository) UserService {
-	return &userService{userRepo: userRepo}
-}
+	// GetUserByUsername mengambil user berdasarkan username.
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 
-// RegisterUser mendaftarkan pengguna baru.
-func (s *userService) RegisterUser(ctx context.Context, user *models.User, password string) error {
-	// Validasi apakah username sudah ada
-	_, err := s.userRepo.GetByUsername(ctx, user.Username.String)
-	if err == nil {
-		return ErrUsernameExists
-	}
-	if err != sql.ErrNoRows {
-		return err // Error lain dari database
-	}
+	// GetUserByEmail mengambil user berdasarkan email.
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 
-	// Validasi apakah email sudah ada (jika email disediakan)
-	if user.Email.Valid {
-		_, err = s.userRepo.GetByEmail(ctx, user.Email.String)
-		if err == nil {
-			return ErrEmailExists
-		}
-		if err != sql.ErrNoRows {
-			return err // Error lain dari database
-		}
-	}
+	// GetUserByPhoneNumber mengambil user berdasarkan nomor telepon.
+	GetUserByPhoneNumber(ctx context.Context, phone string) (*models.User, error)
 
-	hashedPassword, err := utils.HashPassword(password)
-	if err != nil {
-		return err
-	}
+	// UpdateUser memperbarui data user.
+	UpdateUser(ctx context.Context, user *models.User) error
 
-	user.ID = uuid.New()
-	user.PasswordHash = sql.NullString{String: hashedPassword, Valid: true}
-	user.IsActive = true
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
+	// DeleteUser menghapus user berdasarkan ID.
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 
-	return s.userRepo.Create(ctx, user)
-}
+	// ListUsersByType mengambil semua user berdasarkan tipe (EMPLOYEE/CUSTOMER).
+	ListUsersByType(ctx context.Context, userType string) ([]*models.User, error)
 
-// GetUserProfile mengambil profil pengguna berdasarkan ID.
-func (s *userService) GetUserProfile(ctx context.Context, userID uuid.UUID) (*models.User, error) {
-	user, err := s.userRepo.GetByID(ctx, userID)
-	if err == sql.ErrNoRows {
-		return nil, ErrUserNotFound
-	}
-	return user, err
-}
+	// AuthenticateUser memvalidasi login (username/email/phone + password).
+	AuthenticateUser(ctx context.Context, identity string, password string) (*models.User, error)
 
-// UpdateUserProfile memperbarui profil pengguna.
-func (s *userService) UpdateUserProfile(ctx context.Context, user *models.User) error {
-	user.UpdatedAt = time.Now()
-	err := s.userRepo.Update(ctx, user)
-	if err == sql.ErrNoRows {
-		return ErrUserNotFound
-	}
-	return err
+	// ChangePassword mengganti password user.
+	ChangePassword(ctx context.Context, userID uuid.UUID, newPassword string) error
+
+	// ActivateUser & DeactivateUser untuk blokir user tanpa delete.
+	ActivateUser(ctx context.Context, userID uuid.UUID) error
+	DeactivateUser(ctx context.Context, userID uuid.UUID) error
+
+	// SearchUsers pencarian user fleksibel.
+	SearchUsers(ctx context.Context, query string, userType string, limit int) ([]*models.User, error)
 }
