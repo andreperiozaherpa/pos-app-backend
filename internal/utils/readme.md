@@ -1,20 +1,52 @@
-# /Users/andre/Programing/aplikasi perusahaan/pos-backend/internal/utils/readme.md
+# /internal/utils
 
-Direktori ini berisi kumpulan fungsi utilitas internal yang bersifat generik dan dapat digunakan kembali di berbagai bagian aplikasi. Fungsi-fungsi di sini tidak spesifik untuk modul bisnis tertentu (misalnya, manajemen pengguna atau produk), melainkan menyediakan fungsionalitas umum yang dibutuhkan di banyak tempat.
-
-Tujuan utama folder ini adalah untuk:
-
-- **Meningkatkan Reusabilitas**: Menghindari duplikasi kode dengan menyediakan fungsi yang dapat dipanggil dari mana saja.
-- **Memisahkan Tanggung Jawab**: Menjaga logika bisnis tetap bersih dengan memindahkan fungsionalitas pendukung ke tempat yang tepat.
-- **Mempermudah Pemeliharaan**: Perubahan pada utilitas hanya perlu dilakukan di satu tempat.
+Direktori ini berisi berbagai fungsi utilitas (_helper/utility_) generik yang dapat digunakan ulang di berbagai bagian aplikasi.
+Fungsi di sini **tidak spesifik modul bisnis**, tetapi menyediakan fungsionalitas umum yang dibutuhkan banyak fitur.
 
 ---
 
-## Daftar Utilitas
+## 📋 Daftar Utility
 
-Berikut adalah daftar file utilitas yang ada di direktori ini beserta fungsinya:
+| File          | Fungsi                                      | Deskripsi Singkat                                | Status              |
+| ------------- | ------------------------------------------- | ------------------------------------------------ | ------------------- |
+| `password.go` | `HashPassword`, `CheckPasswordHash`,        | Utility hash password aman dengan bcrypt         | ✅ Selesai & Teruji |
+|               | `CheckPasswordHashWithError`, `GetHashCost` | -                                                |                     |
+| `jwt.go`      | `GenerateToken`, `ValidateToken`            | Utility membuat & memverifikasi JWT (login/auth) | ✅ Selesai & Teruji |
 
-- `password.go`: Menyediakan fungsi untuk mengelola password, seperti hashing password menggunakan bcrypt dan memverifikasi password terhadap hash-nya.
-  - **Status: ✅ SELESAI & TERUJI**
-- `jwt.go`: Menyediakan fungsi untuk mengelola JSON Web Tokens (JWT), seperti membuat token JWT baru dan memvalidasi token yang sudah ada.
-  - **Status: ✅ SELESAI & TERUJI**
+---
+
+## Penjelasan Utility
+
+- **password.go**
+
+  - Hash password plaintext ke bcrypt, dengan cost configurable.
+  - Verifikasi password user saat login, aman dan tidak rawan rainbow table.
+  - Ada fungsi cek hash error & audit cost parameter (untuk audit keamanan).
+
+- **jwt.go**
+  - Membuat JWT token menggunakan `HS256` untuk otentikasi user (login, API).
+  - Verifikasi signature, cek expiry, dan extract user ID dari token.
+  - Aman untuk production, secret harus panjang dan random!
+
+---
+
+## Contoh Penggunaan
+
+```go
+// Hash password user
+hash, err := utils.HashPassword("plainpassword")
+
+// Validasi login user
+valid := utils.CheckPasswordHash("inputPassword", hash)
+
+// Generate JWT token
+token, err := utils.GenerateToken("user-id", time.Hour*24, jwtSecret)
+```
+
+---
+
+> Jika menambah file utility baru di folder ini, update README dan jelaskan fungsinya untuk memudahkan tim lain!
+
+**Terakhir update:** [isi tanggal & inisial updater]
+
+---

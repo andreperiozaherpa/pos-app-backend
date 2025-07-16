@@ -12,7 +12,22 @@ Manfaat utama folder ini adalah:
 
 ## Daftar File Konfigurasi
 
-Berikut adalah daftar file konfigurasi yang ada di direktori ini beserta fungsinya:
+| File        | Fungsi                                                                        | Status              |
+| ----------- | ----------------------------------------------------------------------------- | ------------------- |
+| `config.go` | Definisi struct `AppConfig`, fungsi `LoadConfig()` untuk load env & file .env | ✅ Selesai & Teruji |
 
-- `config.go`: Mendefinisikan struktur `AppConfig` yang menampung semua pengaturan aplikasi, serta fungsi `LoadConfig()` yang bertanggung jawab untuk memuat nilai-nilai konfigurasi dari variabel lingkungan dan/atau file `.env`.
-  - **Status: ✅ SELESAI & TERUJI**
+---
+
+## Contoh .env
+
+Berikut contoh file `.env` yang biasa digunakan di aplikasi ini:
+
+```env
+APP_NAME=pos-backend
+APP_PORT=8080
+DATABASE_URL=postgres://user:password@localhost:5432/dbname
+JWT_SECRET=your-super-secret-key
+ENVIRONMENT=development
+```
+
+---

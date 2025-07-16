@@ -351,3 +351,159 @@ created_by_user_id UUID [ref: > users.id] // Siapa yang mencatat biaya ini
 created_at TIMESTAMPTZ [default: `now()`]
 updated_at TIMESTAMPTZ [default: `now()`]
 }
+
+// ---- Tambahan History ----
+Table master_product_histories {
+id UUID [pk, default: `uuid_generate_v4()`]
+master_product_id UUID [not null, ref: > master_products.id]
+changed_by UUID [not null, ref: > users.id]
+change_type VARCHAR(50) [not null] -- e.g. 'CREATE', 'UPDATE', 'DELETE'
+changed_at TIMESTAMPTZ [default: `now()`]
+notes TEXT
+}
+
+Table purchase_order_histories {
+id UUID [pk, default: `uuid_generate_v4()`]
+purchase_order_id UUID [not null, ref: > purchase_orders.id]
+changed_by_user_id UUID [not null, ref: > users.id]
+previous_status VARCHAR(50)
+new_status VARCHAR(50)
+change_time TIMESTAMPTZ [default: `now()`]
+notes TEXT
+}
+
+Table stock_transfer_histories {
+id UUID [pk, default: `uuid_generate_v4()`]
+stock_transfer_id UUID [not null, ref: > internal_stock_transfers.id]
+action VARCHAR(100) [not null, note: "e.g., CREATED, APPROVED, SHIPPED, RECEIVED, CANCELLED"]
+action_date TIMESTAMPTZ [not null, default: `now()`]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table user_login_histories {
+id UUID [pk, default: `uuid_generate_v4()`]
+user_id UUID [not null, ref: > users.id]
+login_time TIMESTAMPTZ [not null, default: `now()`]
+ip_address VARCHAR(100)
+device_info TEXT
+}
+
+// ---- Tambahan Report ----
+Table sales_reports {
+id UUID [pk, default: `uuid_generate_v4()`]
+store_id UUID [not null, ref: > stores.id]
+report_date DATE [not null]
+total_sales DECIMAL(15,2) [not null]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table stock_reports {
+id UUID [pk, default: `uuid_generate_v4()`]
+store_id UUID [not null, ref: > stores.id]
+report_date DATE [not null]
+total_stock_value DECIMAL(18,2) [not null]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table profit_loss_reports {
+id UUID [pk, default: `uuid_generate_v4()`]
+company_id UUID [not null, ref: > companies.id]
+report_date DATE [not null]
+total_revenue DECIMAL(18,2) [not null]
+total_expense DECIMAL(18,2) [not null]
+net_profit DECIMAL(18,2) [not null]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table employee_performance_reports {
+id UUID [pk, default: `uuid_generate_v4()`]
+employee_user_id UUID [not null, ref: > employees.user_id]
+report_date DATE [not null]
+performance_score DECIMAL(5,2) [not null]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table customer_activity_reports {
+id UUID [pk, default: `uuid_generate_v4()`]
+customer_user_id UUID [not null, ref: > customers.user_id]
+company_id UUID [not null, ref: > companies.id]
+activity_date DATE [not null]
+total_transactions INTEGER [default: 0]
+total_amount DECIMAL(15,2) [default: 0]
+points_earned INTEGER [default: 0]
+last_transaction_at TIMESTAMPTZ
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+// ---- tambahan campuran ----
+Table shift_attendances {
+id UUID [pk, default: `uuid_generate_v4()`]
+shift_id UUID [not null, ref: > shifts.id]
+employee_id UUID [not null, ref: > employees.user_id] // bisa juga employee_user_id
+check_in TIMESTAMPTZ
+check_out TIMESTAMPTZ
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table shift_swaps {
+id UUID [pk, default: `uuid_generate_v4()`]
+requested_by_employee_user_id UUID [not null, ref: > employees.user_id]
+requested_to_employee_user_id UUID [not null, ref: > employees.user_id]
+shift_id UUID [not null, ref: > shifts.id] -- Shift yang ingin ditukar
+requested_shift_date DATE [not null]
+reason TEXT
+status VARCHAR(50) [not null, note: "CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))"]
+approved_by_user_id UUID [ref: > users.id]
+approved_at TIMESTAMPTZ
+created_at TIMESTAMPTZ [default: `now()`]
+updated_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table stock_movement_summaries {
+id UUID [pk, default: `uuid_generate_v4()`]
+store_product_id UUID [not null, ref: > store_products.id]
+period_start DATE [not null]
+period_end DATE [not null]
+total_in INTEGER [not null, default: 0]
+total_out INTEGER [not null, default: 0]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table store_product_stock_updates {
+id UUID [pk, default: `uuid_generate_v4()`]
+store_product_id UUID [not null, ref: > store_products.id]
+adjustment_type VARCHAR(50) [not null, note: "e.g., ADJUSTMENT_IN, ADJUSTMENT_OUT, STOCK_OPNAME"]
+quantity_before INTEGER [not null]
+quantity_after INTEGER [not null]
+adjusted_by_user_id UUID [not null, ref: > users.id]
+reason TEXT
+adjustment_date TIMESTAMPTZ [not null, default: `now()`]
+created_at TIMESTAMPTZ [default: `now()`]
+}
+
+Table transaction_audit_logs {
+id UUID [pk, default: `uuid_generate_v4()`]
+transaction_id UUID [not null, ref: > transactions.id]
+action_type VARCHAR(100) [not null, note: "e.g., CREATED, UPDATED, CANCELLED, REFUNDED"]
+performed_by_user_id UUID [not null, ref: > users.id]
+performed_at TIMESTAMPTZ [not null, default: `now()`]
+note TEXT
+}
+
+Table payment_info {
+id UUID [pk, default: `uuid_generate_v4()`]
+transaction_id UUID [not null, ref: > transactions.id]
+payment_method VARCHAR(50) [not null]
+amount DECIMAL(15,2) [not null]
+payment_date TIMESTAMPTZ [default: `now()`]
+}
+
+Table transaction_summaries {
+id UUID [pk, default: `uuid_generate_v4()`]
+store_id UUID [not null, ref: > stores.id]
+total_transactions INTEGER [not null]
+total_revenue DECIMAL(15,2) [not null]
+period_start DATE [not null]
+period_end DATE [not null]
+created_at TIMESTAMPTZ [default: `now()`]
+}

@@ -1,24 +1,44 @@
-# /Users/andre/Programing/aplikasi perusahaan/pos-backend/internal/core/readme.md
+# internal/core
 
-Direktori ini merepresentasikan **Lapisan Core** atau **Domain Layer** dari aplikasi. Ini adalah jantung dari aplikasi yang berisi semua logika bisnis inti (use cases) dan aturan domain.
-
-Tujuan utama folder ini adalah:
-
-- **Enkapsulasi Logika Bisnis**: Semua aturan dan proses bisnis yang kompleks diimplementasikan di sini.
-- **Independensi dari Infrastruktur**: Kode dalam lapisan ini tidak boleh memiliki pengetahuan langsung tentang detail implementasi infrastruktur (seperti HTTP, database, atau sistem eksternal lainnya).
-- **Ketergantungan pada Abstraksi**: Lapisan ini hanya boleh bergantung pada interface (abstraksi) yang didefinisikan di lapisan yang lebih rendah (misalnya, interface repository dari lapisan `data/`). Ini memungkinkan fleksibilitas dan kemudahan pengujian.
+Direktori ini adalah jantung dari arsitektur _Clean Architecture_ aplikasi, yang berisi definisi kontrak (interface) logika bisnis utama (_usecase/service layer_) dan akses data (_repository layer_) untuk setiap domain utama.
 
 ---
 
-## Struktur Subdirektori
+## 📂 Struktur Direktori
 
-Direktori ini berisi subdirektori berikut:
-
-- `services/`: Berisi file service yang mengimplementasikan logika bisnis tertentu.
-  - **Status: ⬜ SEDANG BERLANGSUNG** (Ini adalah fokus pengembangan saat ini. Implementasi penuh akan mencakup logika bisnis, validasi, dan orkestrasi repository).
+| Folder      | Status     | Keterangan                                         |
+| ----------- | ---------- | -------------------------------------------------- |
+| /service    | ✅ Selesai | Interface usecase/business logic (sudah lengkap)   |
+| /repository | ✅ Selesai | Interface repository/data access (sudah lengkap)   |
+| /dto        | ⬜ Belum   | Data transfer object (opsional, belum ada)         |
+| /mock       | ⬜ Belum   | Mock interface untuk testing (opsional, belum ada) |
+| /test       | ⬜ Belum   | Kode unit/integrasi testing (opsional, belum ada)  |
 
 ---
 
-## Catatan
+## 📝 Panduan Pengembangan
 
-Lapisan `core` adalah lapisan yang paling stabil dan paling sedikit berubah dalam arsitektur aplikasi, karena ia hanya berurusan dengan aturan bisnis yang mendasar. Perubahan pada detail implementasi (misalnya, mengganti database) tidak akan memengaruhi lapisan ini.
+1. **Definisikan interface baru** di folder `/service` (untuk business logic) dan `/repository` (untuk akses data) untuk setiap entitas/domain baru.
+2. **Update README di tiap subfolder** sebagai checklist progres (status interface/method/service).
+3. **Implementasikan interface** pada layer aplikasi/infrastruktur (di luar core).
+4. **Pisahkan logika domain** dari detail database atau teknologi lain, agar mudah di-test dan scalable.
+5. **Selalu update dokumentasi** jika ada entitas, method, atau workflow baru.
+
+---
+
+## 📑 Dokumentasi & Navigasi
+
+- [Service Layer (`/service`)](./service/readme.md):  
+  Daftar lengkap interface logika bisnis (dengan checklist method utama & advanced).
+- [Repository Layer (`/repository`)](./repository/readme.md):  
+  Daftar lengkap interface repository (dengan checklist method utama & advanced).
+
+---
+
+## 🚀 Catatan
+
+- Tidak ada implementasi business logic/infrastruktur di sini, hanya kontrak (_pure interface_).
+- File struct model didefinisikan di `internal/models`.
+- Untuk testing/mock bisa gunakan `/mock` atau tools GoMock, dst.
+
+---

@@ -23,4 +23,28 @@ type CustomerService interface {
 
 	// ListCustomersByCompanyID mengambil semua customer pada company tertentu.
 	ListCustomersByCompanyID(ctx context.Context, companyID uuid.UUID) ([]*models.Customer, error)
+
+	// SearchCustomers melakukan pencarian customer secara fleksibel berdasarkan nama, email, atau nomor telepon.
+	SearchCustomers(ctx context.Context, companyID uuid.UUID, query string) ([]*models.Customer, error)
+
+	// DeactivateCustomer menonaktifkan (soft delete/blacklist) customer.
+	DeactivateCustomer(ctx context.Context, userID uuid.UUID) error
+
+	// ListCustomerTransactions mengambil daftar transaksi yang dilakukan customer.
+	ListCustomerTransactions(ctx context.Context, userID uuid.UUID) ([]*models.Transaction, error)
+
+	// GetCustomerLoyaltyPoints mengambil jumlah poin loyalitas customer.
+	GetCustomerLoyaltyPoints(ctx context.Context, userID uuid.UUID) (int, error)
+
+	// UpdateCustomerLoyaltyPoints memperbarui (menambah/mengurangi) poin loyalitas customer.
+	UpdateCustomerLoyaltyPoints(ctx context.Context, userID uuid.UUID, delta int) error
+
+	// ExportCustomers mengekspor data customer ke file (excel/CSV).
+	ExportCustomers(ctx context.Context, companyID uuid.UUID) ([]byte, error)
+
+	// BulkImportCustomers melakukan import massal data customer dari file excel/CSV.
+	BulkImportCustomers(ctx context.Context, companyID uuid.UUID, fileData []byte) error
+
+	// GetCustomerContactHistory mengambil riwayat komunikasi dengan customer (call/email/wa).
+	GetCustomerContactHistory(ctx context.Context, userID uuid.UUID) ([]*models.ContactHistory, error)
 }

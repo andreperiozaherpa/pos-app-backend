@@ -2,9 +2,47 @@
 
 Dokumen ini menyediakan tinjauan lengkap tentang aplikasi backend Point of Sale (POS), termasuk visi, kasus penggunaan, arsitektur, struktur proyek, dan status kemajuan.
 
+## Daftar Isi
+
+- [Visi Aplikasi](#visi-aplikasi)
+- [Kasus Penggunaan (Use Cases)](#kasus-penggunaan-use-cases)
+  - [Auth & User Management](#1-auth--user-management)
+  - [Organization & Store Management](#2-organization--store-management)
+  - ...
+- [Struktur Proyek](#struktur-proyek)
+- [Status Kemajuan Proyek](#status-kemajuan-proyek)
+
+---
+
+## Teknologi yang Digunakan
+
+- Bahasa Pemrograman: Go 1.22+
+- Database: PostgreSQL 15
+- Migrasi: Goose / SQLC (atau alat lain yang kamu pakai)
+- Routing: Chi / Gin (sebutkan jika sudah ada)
+- Auth: JWT (jika pakai)
+- Env Management: godotenv
+- Logger: Zerolog / Logrus (sebutkan jika ada)
+- Testing: `testing`, `testify`, dsb.
+
+---
+
 ## Visi Aplikasi
 
 Aplikasi ini adalah sistem Point of Sale (POS) multi-tenant yang dirancang untuk mendukung berbagai jenis perusahaan dengan struktur bisnis yang kompleks. Tujuannya adalah menyediakan platform yang fleksibel, andal, dan dapat diskalakan untuk mengelola operasi penjualan, inventaris, karyawan, dan pelanggan.
+
+---
+
+## Arsitektur Umum
+
+Aplikasi ini mengikuti pendekatan Clean Architecture dengan pembagian tanggung jawab sebagai berikut:
+
+- `internal/api`: HTTP handler dan route
+- `internal/core`: logika bisnis dan interface use case
+- `internal/data`: akses database
+- `internal/models`: entity/domain model
+
+Semua dependensi mengarah ke `core`, menjaga isolasi logika bisnis.
 
 ---
 
@@ -123,54 +161,7 @@ Berikut adalah beberapa kasus penggunaan utama yang akan diimplementasikan dalam
 
 ## Struktur Proyek
 
-Struktur folder proyek ini mengikuti praktik terbaik Go untuk aplikasi backend dengan arsitektur berlapis.
-
-```
-/pos-backend
-├── .env                                    # File konfigurasi untuk lingkungan development (JANGAN DI-COMMIT)
-├── .env.test                               # File konfigurasi untuk lingkungan testing (JANGAN DI-COMMIT)
-├── .gitignore                              # File untuk mengabaikan file/folder dari Git
-├── go.mod                                  # File definisi modul Go dan dependensinya
-├── go.sum                                  # Checksum dependensi proyek Go
-├── Dockerfile                              # Konfigurasi untuk membangun container Docker aplikasi
-├── erd.md                                  # Dokumentasi Entity Relationship Diagram (ERD)
-├── readme.md                               # Dokumentasi ringkas proyek
-└── dokumentasi.md                          # Dokumentasi lengkap proyek (file ini)
-├── cmd/                                    # Berisi aplikasi yang dapat dieksekusi (executable)
-│   └── api/                                # Aplikasi untuk server API utama
-│       └── main.go                         # Titik masuk (entry point) aplikasi, menginisialisasi dan memulai server
-├── internal/                               # Kode aplikasi privat, tidak untuk diimpor oleh proyek eksternal
-│   ├── api/                                # Lapisan API / Handler HTTP (presentation layer)
-│   │   ├── handlers/                       # Implementasi handler HTTP untuk setiap modul fungsional
-│   │   ├── middleware/                     # Middleware HTTP (e.g., auth, logging, CORS)
-│   │   └── router.go                       # Definisi semua rute API dan menghubungkannya ke handler
-│   ├── config/                             # Logika pemuatan dan struktur konfigurasi aplikasi
-│   │   └── config.go                       # Definisi struct AppConfig dan fungsi LoadConfig()
-│   ├── core/                               # Logika bisnis inti / Use cases / Services (domain layer)
-│   │   └── services/                       # Implementasi service yang berisi logika bisnis utama
-│   │       ├── auth_service.go             # Service untuk autentikasi dan otorisasi
-│   │       └── errors.go                   # Definisi error kustom untuk lapisan service
-│   ├── data/                               # Lapisan akses data / Repositories (infrastructure layer)
-│   │   └── postgres/                       # Implementasi repository spesifik untuk PostgreSQL
-│   │       └── user_repository.go          # Contoh: Repository untuk entitas `user`
-│   ├── database/                           # Setup koneksi database
-│   │   └── postgres.go                     # Fungsi untuk inisialisasi koneksi PostgreSQL
-│   ├── models/                             # Struktur data / Entitas (struct Go yang merepresentasikan tabel DB)
-│   │   └── user.go                         # Contoh: Model untuk entitas `user`
-│   └── utils/                              # Fungsi-fungsi utilitas internal yang tidak spesifik modul
-│       ├── jwt.go                          # Utilitas untuk membuat dan memvalidasi JWT
-│       └── password.go                     # Utilitas untuk hashing dan verifikasi password
-├── migrations/                             # File-file migrasi database
-│   └── 0001_initial_schema.sql             # Contoh: Migrasi awal untuk membuat tabel
-└── tests/                                  # Direktori untuk semua jenis test
-    ├── mocks/                              # Implementasi mock dari interface untuk unit testing
-    │   └── user_repository_mock.go         # Contoh: Mock untuk UserRepository
-    ├── repository/                         # Unit test untuk lapisan repository
-    │   └── postgres/                       # Test spesifik untuk repository PostgreSQL
-    │       └── user_repository_test.go     # Contoh: Test untuk UserRepository
-    └── services/                           # Unit test untuk lapisan service
-        └── auth_service_test.go            # Contoh: Test untuk AuthService
-```
+Untuk detail lengkap mengenai struktur folder dan file dalam proyek ini, silakan merujuk ke dokumen terpisah: [**Struktur Proyek**](./struktur.md).
 
 ---
 
@@ -185,7 +176,7 @@ Berikut adalah status kemajuan untuk setiap komponen utama aplikasi:
 - **Lapisan Repository (`internal/data/postgres`)**:
   - **Status: ✅ SELESAI & TERUJI** (Semua repository untuk PostgreSQL telah diimplementasikan dan diuji).
 - **Lapisan Service (`internal/core/services`)**:
-  - **Status: ⬜ SEDANG BERLANGSUNG** (Fokus pengembangan saat ini. `AuthService` selesai, sisanya dalam antrean).
+  - **Status: ⬜ SEDANG BERLANGSUNG** (Fokus pengembangan saat ini. `AuthService`, `UserService`, `EmployeeService`, dan `CustomerService` telah selesai dan teruji).
 - **Lapisan API (`internal/api`)**:
   - **Status: ⬜ TO-DO** (Akan diimplementasikan setelah lapisan service cukup matang).
 

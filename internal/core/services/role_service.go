@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"pos-app/backend/internal/models"
+
+	"github.com/google/uuid"
 )
 
 // RoleService mendefinisikan kontrak use case untuk role/level user (kasir, manager, admin, dsb).
@@ -22,6 +24,24 @@ type RoleService interface {
 	// ListRoles mengambil semua role yang tersedia.
 	ListRoles(ctx context.Context) ([]*models.Role, error)
 
-	// AssignRoleToEmployee menetapkan role ke employee (opsional, untuk multi-role).
-	AssignRoleToEmployee(ctx context.Context, employeeUserID string, roleID int64) error
+	// AssignRoleToEmployee memberikan role ke employee.
+	AssignRoleToEmployee(ctx context.Context, userID uuid.UUID, roleID int) error
+
+	// ListRolePermissions menampilkan daftar permission yang dimiliki role.
+	ListRolePermissions(ctx context.Context, roleID int) ([]*models.Permission, error)
+
+	// RemoveRoleFromEmployee menghapus role tertentu dari employee.
+	RemoveRoleFromEmployee(ctx context.Context, userID uuid.UUID, roleID int) error
+
+	// AssignRoleToMultipleEmployees menetapkan role ke banyak employee sekaligus.
+	AssignRoleToMultipleEmployees(ctx context.Context, roleID int, userIDs []uuid.UUID) error
+
+	// ListUsersByRole mengambil daftar user yang memiliki role tertentu.
+	ListUsersByRole(ctx context.Context, roleID int) ([]*models.User, error)
+
+	// CloneRole menggandakan role beserta seluruh permissionnya.
+	CloneRole(ctx context.Context, sourceRoleID int, newRoleName string) (int, error)
+
+	// ExportRoles mengekspor daftar role ke file excel/CSV.
+	ExportRoles(ctx context.Context) ([]byte, error)
 }

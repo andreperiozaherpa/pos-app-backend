@@ -24,16 +24,16 @@ const (
 
 // StockMovement merepresentasikan data pergerakan stok dari tabel 'stock_movements'.
 type StockMovement struct {
-	ID              uuid.UUID         `db:"id"`
-	StoreProductID  uuid.UUID         `db:"store_product_id"` // Merujuk ke store_products.id
-	StoreID         uuid.UUID         `db:"store_id"`
-	MovementType    StockMovementType `db:"movement_type"`
-	QuantityChanged int32             `db:"quantity_changed"` // Bisa positif atau negatif
-	MovementDate    time.Time         `db:"movement_date"`    // TIMESTAMPTZ
-	ReferenceID     uuid.NullUUID     `db:"reference_id"`     // Bisa NULL
-	ReferenceType   sql.NullString    `db:"reference_type"`   // Bisa NULL
-	Notes           sql.NullString    `db:"notes"`
-	CreatedByUserID uuid.NullUUID     `db:"created_by_user_id"`
-	CreatedAt       time.Time         `db:"created_at"`
-	// UpdatedAt        time.Time         `db:"updated_at"` // Tambahkan jika ada di DB
+	ID              uuid.UUID         `db:"id" json:"id"`
+	StoreProductID  uuid.UUID         `db:"store_product_id" json:"store_product_id"`
+	StoreID         uuid.UUID         `db:"store_id" json:"store_id"`
+	MovementType    StockMovementType `db:"movement_type" json:"movement_type"`
+	QuantityChanged int32             `db:"quantity_changed" json:"quantity_changed"`
+	MovementDate    time.Time         `db:"movement_date" json:"movement_date"`
+	ReferenceID     uuid.NullUUID     `db:"reference_id" json:"reference_id,omitempty"`
+	ReferenceType   sql.NullString    `db:"reference_type" json:"reference_type,omitempty"`
+	Notes           sql.NullString    `db:"notes" json:"notes,omitempty"`
+	CreatedByUserID uuid.NullUUID     `db:"created_by_user_id" json:"created_by_user_id,omitempty"`
+	CreatedAt       time.Time         `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time         `db:"updated_at" json:"updated_at"`
 }

@@ -1,33 +1,50 @@
-# /Users/andre/Programing/aplikasi perusahaan/pos-backend/migrations/readme.md
-
-Direktori ini berisi semua file migrasi database. Migrasi adalah perubahan terstruktur pada skema database (dan kadang-kadang data) yang diterapkan secara berurutan.
-
-Tujuan utama folder ini adalah untuk:
-
-- **Manajemen Skema Terkontrol**: Memastikan bahwa perubahan skema database diterapkan secara konsisten di semua lingkungan (development, staging, production).
-- **Pelacakan Perubahan**: Menyediakan riwayat yang jelas tentang bagaimana skema database telah berevolusi dari waktu ke waktu.
-- **Kolaborasi Tim**: Memungkinkan beberapa pengembang untuk bekerja pada perubahan database secara bersamaan tanpa konflik yang signifikan.
-- **Rollback**: Memfasilitasi kemampuan untuk mengembalikan perubahan skema jika terjadi masalah.
+# Dokumentasi Folder Migrasi Database
 
 ---
 
-## Jenis File Migrasi
+## 1. Penjelasan Folder & Tujuan
 
-File migrasi di sini biasanya akan berupa skrip SQL (`.sql`) atau file yang spesifik untuk alat migrasi yang digunakan (misalnya, `goose`, `migrate`, `golang-migrate`).
+Folder ini berisi file-file migrasi database yang digunakan untuk mengelola perubahan skema dan data secara terstruktur dan terkontrol. Tujuannya adalah:
 
-Berikut adalah contoh jenis-jenis migrasi yang akan ada di folder ini:
-
-- `YYYYMMDDHHMMSS_initial_schema.sql`: Migrasi awal untuk membuat semua tabel dan indeks dasar.
-  - **Status: ⬜ TO-DO**
-- `YYYYMMDDHHMMSS_add_new_feature_table.sql`: Migrasi untuk menambahkan tabel baru yang diperlukan oleh fitur tertentu.
-  - **Status: ⬜ TO-DO**
-- `YYYYMMDDHHMMSS_alter_existing_table.sql`: Migrasi untuk mengubah skema tabel yang sudah ada (misalnya, menambahkan kolom, mengubah tipe data).
-  - **Status: ⬜ TO-DO**
-- `YYYYMMDDHHMMSS_data_migration_for_x.sql`: Migrasi untuk memanipulasi data yang sudah ada di database (misalnya, mengisi kolom baru dengan nilai default).
-  - **Status: ⬜ TO-DO**
+- Menjamin konsistensi perubahan skema di seluruh lingkungan (development, staging, production).
+- Menyediakan riwayat perubahan yang terdokumentasi dengan baik.
+- Memudahkan kolaborasi antar pengembang tanpa konflik.
+- Memfasilitasi rollback jika terjadi masalah pada migrasi.
 
 ---
 
-## Catatan
+## 2. Panduan File Migrasi
 
-Setiap file migrasi harus bersifat _idempotent_ (dapat dijalankan berkali-kali tanpa efek samping yang tidak diinginkan) dan _atomic_ (berhasil sepenuhnya atau gagal sepenuhnya). Penamaan file migrasi biasanya mengikuti format timestamp untuk memastikan urutan eksekusi yang benar.
+- File migrasi berupa skrip SQL (`.sql`) atau format yang sesuai dengan alat migrasi yang digunakan (misal: goose, golang-migrate).
+- Penamaan file mengikuti format timestamp `YYYYMMDDHHMMSS_deskripsi.sql` untuk memastikan urutan eksekusi yang tepat.
+- Setiap migrasi harus bersifat **idempotent** (dapat dijalankan ulang tanpa efek samping) dan **atomic** (berhasil sepenuhnya atau gagal sepenuhnya).
+
+---
+
+## 3. Checklist Progres Migrasi
+
+| File Migrasi                             | Deskripsi Singkat                                                                                                                                                                                                                      | Status     |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 20240716090000_initial_core_schema.sql   | Semua tabel inti: companies, business_lines, stores, users, employees, roles, role_permissions, employee_roles, permissions, customers                                                                                                 | ✅ SELESAI |
+| 20240716091000_shift_and_supplier.sql    | Modul shift (shifts), shift_attendances, shift_swaps, suppliers                                                                                                                                                                        | ✅ SELESAI |
+| 20240716092000_tax_and_product.sql       | Modul tax_rates, master_products, store_products                                                                                                                                                                                       | ✅ SELESAI |
+| 20240716093000_transactions.sql          | Modul transaksi: transactions, transaction_items, payment_info                                                                                                                                                                         | ✅ SELESAI |
+| 20240716094000_discount_and_applied.sql  | Modul diskon: discounts, applied_item_discounts, applied_transaction_discounts                                                                                                                                                         | ✅ SELESAI |
+| 20240716095000_stock_and_purchasing.sql  | Modul pembelian, stok: purchase_orders, purchase_order_items, internal_stock_transfers, internal_stock_transfer_items, stock_movements, store_product_stock_updates, stock_movement_summaries, stock_reports, stock_transfer_histories | ✅ SELESAI |
+| 20240716096000_audit_and_operational.sql | Audit & keuangan: activity_logs, operational_expenses                                                                                                                                                                                  | ✅ SELESAI |
+| 20240716097000_history_tables.sql        | Tabel histori: master_product_histories, purchase_order_histories, stock_transfer_histories, user_login_histories                                                                                                                      | ✅ SELESAI |
+| 20240716098000_report_tables.sql         | Modul report: sales_reports, stock_reports, profit_loss_reports, employee_performance_reports, customer_activity_reports, transaction_summaries                                                                                        | ✅ SELESAI |
+
+---
+
+## 4. Catatan & Konvensi Penamaan
+
+- **Idempotent**: Pastikan setiap migrasi dapat dijalankan berulang kali tanpa menghasilkan error atau duplikasi data.
+- **Atomic**: Setiap migrasi harus berhasil sepenuhnya atau gagal tanpa mengubah kondisi database.
+- **Urutan Timestamp**: Penamaan file migrasi menggunakan timestamp memastikan urutan eksekusi yang benar.
+- **Update Migrasi**: Jika perlu melakukan perubahan pada migrasi yang sudah ada, buat file migrasi baru dengan timestamp lebih baru untuk menghindari konflik dan menjaga histori perubahan.
+- **Rollback**: Disarankan membuat migrasi rollback untuk setiap perubahan besar agar mudah kembali ke kondisi sebelumnya jika terjadi masalah.
+
+---
+
+Dokumentasi ini harus selalu diperbarui seiring dengan bertambahnya migrasi baru agar memudahkan tracking dan kolaborasi tim.

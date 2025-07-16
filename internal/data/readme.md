@@ -1,26 +1,28 @@
-# /Users/andre/Programing/aplikasi perusahaan/pos-backend/internal/data/readme.md
+# Dokumentasi Folder internal/data
 
-Direktori ini merepresentasikan **Lapisan Akses Data** atau **Infrastructure Layer** dari aplikasi. Ini adalah tempat di mana implementasi konkret dari mekanisme persistensi data berada.
+Folder `internal/data` adalah tempat implementasi lapisan infrastruktur aplikasi yang berhubungan langsung dengan penyimpanan data, seperti database, cache, atau storage lainnya.
 
-Tanggung jawab utama folder ini adalah:
+## Fungsi Utama
 
-- **Interaksi Database**: Berisi kode yang secara langsung berinteraksi dengan database (misalnya, PostgreSQL, MySQL, SQLite).
-- **Implementasi Repository**: Mengimplementasikan interface repository yang didefinisikan di lapisan `core/` atau di sini, menyediakan metode untuk operasi CRUD (Create, Read, Update, Delete) dan query data.
-- **Abstraksi Detail Database**: Menyembunyikan detail spesifik database dari lapisan di atasnya (seperti lapisan `core/services`), sehingga logika bisnis tidak terikat pada jenis database tertentu.
+- Menyimpan implementasi repository yang berinteraksi dengan database atau storage.
+- Memisahkan interface repository yang ada di `internal/core/repository` dengan implementasi aktual.
+- Menjaga agar lapisan domain tetap bersih dan tidak tergantung pada teknologi penyimpanan data tertentu.
 
----
+## Struktur Folder
 
-## Struktur Subdirektori
+Direkomendasikan untuk membuat subfolder berdasarkan jenis teknologi atau sistem penyimpanan data yang digunakan, misalnya:
 
-- `postgres/`: Berisi implementasi repository spesifik untuk PostgreSQL.
-  - **Status: ✅ SELESAI & TERUJI** (Semua repository untuk PostgreSQL telah diimplementasikan dan diuji).
-- `mysql/`: Berisi implementasi repository spesifik untuk MySQL (jika diperlukan di masa depan).
-  - **Status: ⬜ TO-DO**
-- `sqlite/`: Berisi implementasi repository spesifik untuk SQLite (jika diperlukan di masa depan).
-  - **Status: ⬜ TO-DO**
+- `/internal/data/postgres/` untuk implementasi repository PostgreSQL.
+- `/internal/data/mongo/` untuk implementasi repository MongoDB (jika digunakan).
+- `/internal/data/redis/` untuk implementasi cache Redis (jika digunakan).
 
----
+## Panduan Implementasi
+
+- Implementasi repository harus memenuhi kontrak interface yang sudah didefinisikan di `internal/core/repository`.
+- Jangan mengimpor package domain di dalam implementasi repository agar menjaga independensi domain.
+- Gunakan dependency injection untuk menghubungkan implementasi repository dengan service pada lapisan application.
 
 ## Catatan
 
-Lapisan `data` adalah lapisan yang paling dekat dengan infrastruktur persistensi. Perubahan pada teknologi database (misalnya, dari PostgreSQL ke MySQL) hanya akan memengaruhi implementasi di dalam subdirektori yang relevan di sini, tanpa memengaruhi lapisan `core/services` atau `api/handlers`.
+- Folder ini bisa berkembang seiring bertambahnya teknologi penyimpanan yang digunakan dalam aplikasi.
+- Jika ada service lain yang berhubungan dengan data storage selain repository, bisa dipertimbangkan untuk ditempatkan di sini juga.
